@@ -1,8 +1,10 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.model.product.BaseAttrInfo;
 import com.atguigu.gmall.model.product.BaseCategory1;
 import com.atguigu.gmall.model.product.BaseCategory2;
 import com.atguigu.gmall.model.product.BaseCategory3;
+import com.atguigu.gmall.product.mapper.BaseAttrInfoMapper;
 import com.atguigu.gmall.product.mapper.BaseCategory1Mapper;
 import com.atguigu.gmall.product.mapper.BaseCategory2Mapper;
 import com.atguigu.gmall.product.mapper.BaseCategory3Mapper;
@@ -24,6 +26,15 @@ public class ManageServiceImpl implements ManageService {
 
     @Resource
     private BaseCategory3Mapper baseCategory3Mapper;
+
+    @Resource
+    private BaseAttrInfoMapper baseAttrInfoMapper;
+
+    @Override
+    public List<BaseAttrInfo> getAttrInfoList(Long category1Id, Long category2Id, Long category3Id) {
+        //使用xml 多表查询
+        return baseAttrInfoMapper.selectAttrInfoList(category1Id,category2Id,category3Id);
+    }
 
     /**
      * 查询所有三级分类数据
