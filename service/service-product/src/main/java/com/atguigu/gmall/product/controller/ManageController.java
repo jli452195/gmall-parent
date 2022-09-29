@@ -3,6 +3,7 @@ package com.atguigu.gmall.product.controller;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.BaseCategory1;
 import com.atguigu.gmall.model.product.BaseCategory2;
+import com.atguigu.gmall.model.product.BaseCategory3;
 import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.extension.api.R;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +40,13 @@ public class ManageController {
         return Result.ok(baseCategory2List);
     }
 
+    //admin/product/getCategory3/{category2Id}
+    @GetMapping("getCategory3/{category2Id}")
+    public Result getCategory3(@PathVariable Long category2Id){
+        //调用服务方法
+        List<BaseCategory3> baseCategory3List = this.manageService.getCategory3(category2Id);
+        //返回所有二级数据
+        return Result.ok(baseCategory3List);
+    }
 
 }
