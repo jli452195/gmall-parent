@@ -1,0 +1,24 @@
+server:
+  port: 8206
+mybatis-plus:
+  mapper-locations: classpath:mapper/*Mapper.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: jli452195.
+    url: jdbc:mysql://124.70.18.16:3306/gmall_product?characterEncoding=utf-8&useSSL=false
+  redis:
+    host: 124.70.18.16
+    password:
+    database: 0
+    port: 6379
+  zipkin:
+    base-url: http://124.70.18.16:9411
+  rabbitmq:
+    host: 124.70.18.16
+    port: 5672
+    username: guest
+    password: jli452195.
