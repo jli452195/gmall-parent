@@ -1,23 +1,18 @@
 package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
-import com.atguigu.gmall.model.product.BaseAttrInfo;
-import com.atguigu.gmall.model.product.BaseCategory1;
-import com.atguigu.gmall.model.product.BaseCategory2;
-import com.atguigu.gmall.model.product.BaseCategory3;
+import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.extension.api.R;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin/product")
+//@CrossOrigin
 public class ManageController {
 
     @Resource
@@ -60,5 +55,32 @@ public class ManageController {
         //调用服务方法
         return Result.ok(baseAttrInfoList);
     }
+
+    //  保存平台属性
+    //  将Json 转换为java 能操作的 JavaObject
+    //  @RequestBody  Json---> JavaObject
+    //  @ResponseBody JavaObject ---> Json
+    //admin/product/saveAttrInfo
+    @PostMapping("saveAttrInfo")
+    public Result saveAttrInfo(@RequestBody BaseAttrInfo baseAttrInfo) {
+        //调用服务方法
+        this.manageService.saveAttrInfo(baseAttrInfo);
+        //返回确定
+        return Result.ok();
+    }
+
+    //根据平台属性id 获取到平台属性值集合
+    ///admin/product/getAttrValueList/{attrId}
+    @GetMapping("getAttrValueList/{attrId}")
+    public Result getAttrValueList(@PathVariable Long attrId) {
+        //  调用服务层方法
+        //  直接获取到属性值集合！select * from base_attr_value where attr_id = ?
+//        List<BaseAttrValue> baseAttrValueList = this.manageService.getAttrValueList(attrId);
+        //  select * from base_attr_info where id = attrId; 先走属性！再走属性值！
+        BaseAttrInfo baseAttrInfo = this.manageService.getBaseAttrInfo(attrId);
+        //返回数据
+        return Result.ok(baseAttrInfo.getAttrValueList());
+    }
+
 
 }
