@@ -25,6 +25,7 @@
         <include refid="xSql"></include>
         from base_attr_info bai
         inner join base_attr_value bav
+        on bai.id = bav.attr_id
         <where>
             <trim prefix="(" suffix=")">
                 <if test="category1Id != null and category1Id != 0">

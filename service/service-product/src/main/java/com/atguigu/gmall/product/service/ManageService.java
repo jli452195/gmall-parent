@@ -1,18 +1,22 @@
 package com.atguigu.gmall.product.service;
 
 import com.atguigu.gmall.model.product.*;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
 
 public interface ManageService {
     /**
      * 查询所有一级分类数据
+     *
      * @return
      */
     List<BaseCategory1> getCategory1();
 
     /**
      * 查询所有二级分类数据
+     *
      * @param category1Id
      * @return
      */
@@ -20,6 +24,7 @@ public interface ManageService {
 
     /**
      * 查询所有三级分类数据
+     *
      * @param category2Id
      * @return
      */
@@ -27,6 +32,7 @@ public interface ManageService {
 
     /**
      * 根据分类id获取平台属性集合
+     *
      * @param category1Id
      * @param category2Id
      * @param category3Id
@@ -36,12 +42,14 @@ public interface ManageService {
 
     /**
      * 保存-修改平台属性
+     *
      * @param baseAttrInfo
      */
     void saveAttrInfo(BaseAttrInfo baseAttrInfo);
 
     /**
      * 根据平台属性id 获取到平台属性值集合
+     *
      * @param attrId
      * @return
      */
@@ -49,8 +57,71 @@ public interface ManageService {
 
     /**
      * 根据平台属性id 获取到平台属性值
+     *
      * @param attrId
      * @return
      */
     BaseAttrInfo getBaseAttrInfo(Long attrId);
+
+    /**
+     * spu分页列表
+     *
+     * @param spuInfoPage
+     * @return
+     */
+    IPage getSpuInfoList(Page<SpuInfo> spuInfoPage, SpuInfo spuInfo);
+
+    /**
+     * 获取销售属性
+     * @param
+     * @return
+     */
+    List<BaseSaleAttr> getBaseSaleAttrList();
+
+    /**
+     * 保存spu属性
+     * @param spuInfo
+     */
+    void saveSpuInfo(SpuInfo spuInfo);
+
+    /**
+     * spu分页列表
+     * @param skuInfoPage
+     * @param skuInfo
+     * @return
+     */
+    IPage getSkuInfoList(Page<SkuInfo> skuInfoPage, SkuInfo skuInfo);
+
+    /**
+     * 根据spuId 查询销售属性
+     * @param spuId
+     * @return
+     */
+    List<SpuSaleAttr> getSpuSaleAttrList(Long spuId);
+
+    /**
+     * 根据spuId回显图片
+     * @param spuId
+     * @return
+     */
+    List<SpuImage> getSpuImageList(Long spuId);
+
+    /**
+     * 保存sku属性
+     * @param skuInfo
+     */
+    void saveSkuInfo(SkuInfo skuInfo);
+
+    /**
+     * 下架商品信息
+     * @param skuId
+     */
+    void cancelSale(Long skuId);
+
+
+    /**
+     * 上架商品信息
+     * @param skuId
+     */
+    void onSale(Long skuId);
 }
