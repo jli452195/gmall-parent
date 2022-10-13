@@ -1,5 +1,7 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
+import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.product.mapper.SpuInfoMapper;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
@@ -7,12 +9,18 @@ import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ManageServiceImpl implements ManageService {
@@ -62,6 +70,12 @@ public class ManageServiceImpl implements ManageService {
     @Resource
     private SkuAttrValueMapper skuAttrValueMapper;
 
+    @Resource
+    private BaseCategoryViewMapper baseCategoryViewMapper;
+
+    @Autowired
+    private RedissonClient redissonClient;
+
 
     //直接获取到属性值集合
     @Override
@@ -70,6 +84,95 @@ public class ManageServiceImpl implements ManageService {
         QueryWrapper<BaseAttrValue> baseAttrValueQueryWrapper = new QueryWrapper<>();
         baseAttrValueQueryWrapper.eq("attr_id", attrId);
         return baseAttrValueMapper.selectList(baseAttrValueQueryWrapper);
+    }
+
+
+    //获取sku基本信息和图片信息
+    @Override
+    @GmallCache(prefix = "sku:")
+    public SkuInfo getSkuInfo(Long skuId) {
+        //根据id获取skuInfo信息
+        //获取skuImage插入到skuInfo中
+        //select * from sku_info where id = skuId;
+//        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+//        List<SkuImage> skuImageList = skuImageMapper.selectList(new QueryWrapper<SkuImage>().eq("sku_id", skuId));
+//        skuInfo.setSkuImageList(skuImageList);
+//        return skuInfo;
+        return this.getSkuInfoDB(skuId);
+        //返回数据
+
+    }
+
+    private SkuInfo getSkuInfoDB(Long skuId) {
+        //select * from sku_info where id = skuId;
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        List<SkuImage> skuImageList = skuImageMapper.selectList(new QueryWrapper<SkuImage>().eq("sku_id", skuId));
+        // 解决空指针
+        if (skuInfo != null) {
+            skuInfo.setSkuImageList(skuImageList);
+        }
+        return skuInfo;
+    }
+
+
+    //根据skuId spuId获取销售属性
+    @Override
+    @GmallCache(prefix = "spuSaleAttr:")
+    public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
+        //调用mapper层
+        return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
+
+    }
+
+    //通过skuId集合来查询数据
+    @Override
+    @GmallCache(prefix = "attrList:")
+    public List<BaseAttrInfo> getAttrList(Long skuId) {
+        return this.baseAttrInfoMapper.selectBaseAttrInfoBySkuId(skuId);
+    }
+
+    //切换商品
+    @Override
+    @GmallCache(prefix = "skuValue:")
+    public Map getSkuValueIdsMap(Long spuId) {
+        Map map = new HashMap();
+        List<Map> mapList = skuSaleAttrValueMapper.selectSkuValueIds(spuId);
+        if (!CollectionUtils.isEmpty(mapList)) {
+            mapList.forEach(map1 -> {
+                //{"3739|3741":27,"3738|3741":28}
+                map.put(map1.get("value_ids"), map1.get("sku_id"));
+            });
+        }
+        //返回数据
+        return map;
+    }
+
+    //获取sku最新价格
+    @Override
+    public BigDecimal getSkuPrice(Long skuId) {
+        //获取价格数据
+        //select price from sku_info where id = ?
+        SkuInfo skuInfo = skuInfoMapper.selectOne(new QueryWrapper<SkuInfo>().eq("id", skuId).select("price"));
+        if (skuInfo != null) {
+            return skuInfo.getPrice();
+        }
+        return null;
+    }
+
+    //通过三级分类id查询分类信息
+    @Override
+    @GmallCache(prefix = "categoryView:")
+    public BaseCategoryView getCategoryView(Long category3Id) {
+        //select * from base_category_view where id = ?;
+        return baseCategoryViewMapper.selectById(category3Id);
+    }
+
+    //根据spuId获取海报信息
+    @Override
+    @GmallCache(prefix = "spuPoster:")
+    public List<SpuPoster> getSpuPosterBySpuId(Long spuId) {
+        //select * from spu_poster where spu_id = ? ;
+        return spuPosterMapper.selectList(new QueryWrapper<SpuPoster>().eq("spu_id", spuId));
     }
 
 
@@ -99,7 +202,7 @@ public class ManageServiceImpl implements ManageService {
 
         //skuAttrValueList
         List<SkuAttrValue> skuAttrValueList = skuInfo.getSkuAttrValueList();
-        if (!CollectionUtils.isEmpty(skuAttrValueList)){
+        if (!CollectionUtils.isEmpty(skuAttrValueList)) {
             skuAttrValueList.forEach(skuAttrValue -> {
                 skuAttrValue.setSkuId(skuInfo.getId());
                 skuAttrValueMapper.insert(skuAttrValue);
@@ -108,7 +211,7 @@ public class ManageServiceImpl implements ManageService {
 
         //sku_image
         List<SkuImage> skuImageList = skuInfo.getSkuImageList();
-        if (!CollectionUtils.isEmpty(skuImageList)){
+        if (!CollectionUtils.isEmpty(skuImageList)) {
             skuImageList.forEach(skuImage -> {
                 skuImage.setSkuId(skuInfo.getId());
                 skuImageMapper.insert(skuImage);
@@ -117,7 +220,7 @@ public class ManageServiceImpl implements ManageService {
 
         //sku_sale_attr_value
         List<SkuSaleAttrValue> skuSaleAttrValueList = skuInfo.getSkuSaleAttrValueList();
-        if (!CollectionUtils.isEmpty(skuSaleAttrValueList)){
+        if (!CollectionUtils.isEmpty(skuSaleAttrValueList)) {
             skuSaleAttrValueList.forEach(skuSaleAttrValue -> {
                 skuSaleAttrValue.setSkuId(skuInfo.getId());
                 skuSaleAttrValue.setSpuId(skuInfo.getSpuId());
@@ -125,6 +228,9 @@ public class ManageServiceImpl implements ManageService {
             });
         }
 
+        // 保存时，将skuid添加到布隆过滤器
+        RBloomFilter<Object> bloomFilter = this.redissonClient.getBloomFilter(RedisConst.SKU_BLOOM_FILTER);
+        bloomFilter.add(skuInfo.getId());
 
     }
 

@@ -34,6 +34,18 @@
         where ssa.spu_id = #{spuId}
         order by ssa.base_sale_attr_id
     </select>
+    <!--销售属性 锁定-->
+    <select id="selectSpuSaleAttrListCheckBySku" resultMap="SpuSaleAttrMap">
+        select
+        <include refid="spuSql"></include>,
+        if(sv.sku_id is null, 0, 1) is_checked
+        from spu_sale_attr ssa
+        inner join spu_sale_attr_value ssav
+        on ssa.spu_id = ssav.spu_id and ssa.base_sale_attr_id = ssav.base_sale_attr_id
+        left join sku_sale_attr_value sv on sv.sale_attr_value_id = ssav.id and sv.sku_id = #{skuId}
+        where ssa.spu_id = #{spuId}
+        order by ssa.base_sale_attr_id, ssav.id
+    </select>
 
 
 </mapper>

@@ -32,10 +32,10 @@
                     category_id = #{category1Id} and category_level = 1
                 </if>
                 <if test="category2Id != null and category2Id != 0">
-                   or category_id = #{category2Id} and category_level = 2
+                    or category_id = #{category2Id} and category_level = 2
                 </if>
                 <if test="category3Id != null and category3Id != 0">
-                   or category_id = #{category3Id} and category_level = 3
+                    or category_id = #{category3Id} and category_level = 3
                 </if>
             </trim>
         </where>
@@ -45,4 +45,14 @@
 
     </select>
 
+    <!--通过skuId集合来查询数据-->
+    <select id="selectBaseAttrInfoBySkuId" resultMap="BaseAttrInfoMap">
+        select
+        <include refid="xSql"></include>
+        from base_attr_info bai
+        inner join base_attr_value bav
+        on bai.id = bav.attr_id
+        inner join sku_attr_value sav on sav.value_id = bav.id
+        where sav.sku_id = #{skuId}
+    </select>
 </mapper>

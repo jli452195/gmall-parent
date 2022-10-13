@@ -4,7 +4,10 @@ import com.atguigu.gmall.model.product.*;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+
 
 public interface ManageService {
     /**
@@ -73,6 +76,7 @@ public interface ManageService {
 
     /**
      * 获取销售属性
+     *
      * @param
      * @return
      */
@@ -80,12 +84,14 @@ public interface ManageService {
 
     /**
      * 保存spu属性
+     *
      * @param spuInfo
      */
     void saveSpuInfo(SpuInfo spuInfo);
 
     /**
      * spu分页列表
+     *
      * @param skuInfoPage
      * @param skuInfo
      * @return
@@ -94,6 +100,7 @@ public interface ManageService {
 
     /**
      * 根据spuId 查询销售属性
+     *
      * @param spuId
      * @return
      */
@@ -101,6 +108,7 @@ public interface ManageService {
 
     /**
      * 根据spuId回显图片
+     *
      * @param spuId
      * @return
      */
@@ -108,12 +116,14 @@ public interface ManageService {
 
     /**
      * 保存sku属性
+     *
      * @param skuInfo
      */
     void saveSkuInfo(SkuInfo skuInfo);
 
     /**
      * 下架商品信息
+     *
      * @param skuId
      */
     void cancelSale(Long skuId);
@@ -121,7 +131,61 @@ public interface ManageService {
 
     /**
      * 上架商品信息
+     *
      * @param skuId
      */
     void onSale(Long skuId);
+
+    /**
+     * 根据skuId获取数据
+     *
+     * @param skuId
+     * @return
+     */
+    SkuInfo getSkuInfo(Long skuId);
+
+
+    /**
+     * 根据spuId获取海报信息
+     *
+     * @param spuId
+     * @return
+     */
+    List<SpuPoster> getSpuPosterBySpuId(Long spuId);
+
+    /**
+     * 通过三级分类id查询分类信息
+     * @param category3Id
+     * @return
+     */
+    BaseCategoryView getCategoryView(Long category3Id);
+
+    /**
+     * 获取sku最新价格
+     * @param skuId
+     * @return
+     */
+    BigDecimal getSkuPrice(Long skuId);
+
+    /**
+     * 根据skuId spuId获取销售属性
+     * @param skuId
+     * @param spuId
+     * @return
+     */
+    List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId);
+
+    /**
+     * 切换商品
+     * @param spuId
+     * @return
+     */
+    Map getSkuValueIdsMap(Long spuId);
+
+    /**
+     * 通过skuId集合来查询数据
+     * @param skuId
+     * @return
+     */
+    List<BaseAttrInfo> getAttrList(Long skuId);
 }
