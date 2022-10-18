@@ -82,6 +82,13 @@ public class ManageController {
         return Result.ok(baseAttrInfo.getAttrValueList());
     }
 
+    @PutMapping("update")
+    public Result updateCategory3ById(@PathVariable BaseCategory3 baseCategory3){
+
+        this.manageService.updateCategory3ById(baseCategory3);
+        return Result.ok();
+    }
+
 
 
 

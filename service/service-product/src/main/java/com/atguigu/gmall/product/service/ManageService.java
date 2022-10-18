@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.model.product.*;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -188,4 +189,17 @@ public interface ManageService {
      * @return
      */
     List<BaseAttrInfo> getAttrList(Long skuId);
+
+    /**
+     * 查询分类数据
+     * @return
+     */
+    List<JSONObject> getCategoryList();
+
+    /**
+     * 修改某个数据
+     * @param baseCategory3
+     */
+    void updateCategory3ById(BaseCategory3 baseCategory3);
+
 }

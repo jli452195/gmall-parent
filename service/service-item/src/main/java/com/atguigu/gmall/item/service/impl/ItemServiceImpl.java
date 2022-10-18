@@ -3,6 +3,7 @@ package com.atguigu.gmall.item.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.item.service.ItemService;
+import com.atguigu.gmall.list.client.ListFeignClient;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.redisson.api.RBloomFilter;
@@ -34,6 +35,9 @@ public class ItemServiceImpl implements ItemService {
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
 
+    @Resource
+    private ListFeignClient listFeignClient;
+
     //根据skuI获取数据 将获取存入map 返回
     @Override
     public Map getItemBySkuId(Long skuId) {
@@ -46,6 +50,7 @@ public class ItemServiceImpl implements ItemService {
 //            // 不存在，则返回null集合
 //            return new HashMap<>();
 //        }
+
         CompletableFuture<SkuInfo> skuInfoCompletableFuture = CompletableFuture.supplyAsync(() -> {
             // 根据skuId获取数据
             SkuInfo skuInfo = productFeignClient.getSkuInfo(skuId);
@@ -99,9 +104,13 @@ public class ItemServiceImpl implements ItemService {
                     hashMap.put("attrValue", baseAttrInfo.getAttrValueList().get(0).getValueName());
                     return hashMap;
                 }).collect(Collectors.toList());
-
+                //存储数据
                 map.put("skuAttrList", attrMapList);
             }
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> incrCompletableFuture = CompletableFuture.runAsync(() -> {
+            listFeignClient.incrHotScore(skuId);
         }, threadPoolExecutor);
 
         //多任务组合
@@ -111,10 +120,9 @@ public class ItemServiceImpl implements ItemService {
                 priceCompletableFuture,
                 spuSaleAttrCompletableFuture,
                 skuJsonCompletableFuture,
-                attrCompletableFuture
+                attrCompletableFuture,
+                incrCompletableFuture
         ).join();
-
-
 
         return map;
     }

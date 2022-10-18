@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.product.mapper.SpuInfoMapper;
@@ -12,15 +13,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageServiceImpl implements ManageService {
@@ -76,6 +77,9 @@ public class ManageServiceImpl implements ManageService {
     @Autowired
     private RedissonClient redissonClient;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
 
     //直接获取到属性值集合
     @Override
@@ -122,6 +126,86 @@ public class ManageServiceImpl implements ManageService {
         //调用mapper层
         return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
 
+    }
+
+    @Override
+    public void updateCategory3ById(BaseCategory3 baseCategory3) {
+        //延迟双删
+        this.redisTemplate.delete("index:[]");
+        this.baseCategory3Mapper.updateById(baseCategory3);
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        this.redisTemplate.delete("index:[]");
+
+    }
+
+    //查询分类数据
+    @Override
+    @GmallCache(prefix = "index:")
+    public List<JSONObject> getCategoryList() {
+        // 声明一个集合
+        List<JSONObject> list = new ArrayList<>();
+        // 查询所有分类数据
+        List<BaseCategoryView> baseCategoryViewList = this.baseCategoryViewMapper.selectList(null);
+
+        // 声明一个index
+        int index = 1;
+        // 先按照一级分类id分组
+        // key = category1Id value = List<BaseCategoryView>
+        Map<Long, List<BaseCategoryView>> categoryView1Map = baseCategoryViewList.stream().collect(Collectors.groupingBy(BaseCategoryView::getCategory1Id));
+        Iterator<Map.Entry<Long, List<BaseCategoryView>>> iterator = categoryView1Map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            // 创建一个一级对象
+            JSONObject category1 = new JSONObject();
+            // 获取数据并赋值
+            Map.Entry<Long, List<BaseCategoryView>> entry = iterator.next();
+            Long category1Id = entry.getKey();
+            List<BaseCategoryView> baseCategoryViewList1 = entry.getValue();
+            category1.put("index", index);
+            category1.put("categoryId", category1Id);
+            category1.put("categoryName", baseCategoryViewList1.get(0).getCategory1Name());
+
+            // index:迭代
+            index++;
+            // 创建一个二级分类集合数据
+            ArrayList<JSONObject> category2Child = new ArrayList<>();
+            // 获取二级分类数据!
+            Map<Long, List<BaseCategoryView>> categoryView2Map = baseCategoryViewList1.stream().collect(Collectors.groupingBy(BaseCategoryView::getCategory2Id));
+            Iterator<Map.Entry<Long, List<BaseCategoryView>>> iterator1 = categoryView2Map.entrySet().iterator();
+            while (iterator1.hasNext()) {
+                //创建一个二级分类对象
+                JSONObject category2 = new JSONObject();
+                //获取数据并赋值
+                Map.Entry<Long, List<BaseCategoryView>> entry1 = iterator1.next();
+                Long category2Id = entry1.getKey();
+                List<BaseCategoryView> baseCategoryViewList2 = entry1.getValue();
+                category2.put("categoryId", category2Id);
+                category2.put("categoryName", baseCategoryViewList2.get(0).getCategory2Name());
+
+                // 获取三级分类数据
+                List<JSONObject> category3Child = baseCategoryViewList2.stream().map(baseCategoryView -> {
+                    //创建一个三级分类对象
+                    JSONObject category3 = new JSONObject();
+                    Long category3Id = baseCategoryView.getCategory3Id();
+                    category3.put("categoryId", category3Id);
+                    category3.put("categoryName", baseCategoryView.getCategory3Name());
+                    return category3;
+                }).collect(Collectors.toList());
+
+                //将三级分类数据集合放入二级分类数据
+                category2.put("categoryChild", category3Child);
+                //将二级分类对象放入二级集合中
+                category2Child.add(category2);
+            }
+            //将二级添加到一级分类中
+            category1.put("categoryChild", category2Child);
+            //将一级分类数据放入list集合中汇总
+            list.add(category1);
+        }
+        return list;
     }
 
     //通过skuId集合来查询数据
