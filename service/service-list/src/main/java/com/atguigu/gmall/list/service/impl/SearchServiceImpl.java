@@ -145,7 +145,8 @@ public class SearchServiceImpl implements SearchService {
         searchResponseVo.setPageSize(searchParam.getPageSize());
         searchResponseVo.setPageNo(searchParam.getPageNo());
 
-        long totalPages = (searchResponseVo.getTotal() + searchParam.getPageSize() - 1) / searchParam.getPageNo();
+        long totalPages = (searchResponseVo.getTotal() + searchParam.getPageSize() - 1) / searchParam.getPageSize();
+        searchResponseVo.setTotalPages(totalPages);
         // 返回对象
         return searchResponseVo;
 

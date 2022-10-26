@@ -26,7 +26,7 @@ public class RedisConst {
     //用户登录
     public static final String USER_LOGIN_KEY_PREFIX = "user:login:";
     //    public static final String userinfoKey_suffix = ":info";
-    public static final int USERKEY_TIMEOUT = 60 * 60 * 24 * 7;
+    public static final int USERKEY_TIMEOUT = 60 * 60 * 24 * 30;
 
     //秒杀商品前缀
     public static final String SECKILL_GOODS = "seckill:goods";
